@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ PROJECT_SHORT_TITLE }}{% endblock %} | Academic Research Prototype</title>
+    <!-- Google Fonts: Inter & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+
+    <!-- Navigation Bar -->
+    <header class="navbar-wrapper">
+        <div class="navbar container">
+            <a href="{{ url_for('index') }}" class="brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <span class="brand-title">LUNG</span>
+                    <span class="brand-badge">Counterfactual What-If</span>
+                </div>
+            </a>
+
+            <nav class="nav-links" id="navLinks">
+                <a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">Home</a>
+                <a href="{{ url_for('predict_page') }}" class="nav-link {% if request.endpoint == 'predict_page' %}active{% endif %}">Detection (CNN)</a>
+                <a href="{{ url_for('result_page') }}" class="nav-link {% if request.endpoint == 'result_page' %}active{% endif %}">Grad-CAM XAI</a>
+                <a href="{{ url_for('counterfactual_page') }}" class="nav-link nav-highlight {% if request.endpoint == 'counterfactual_page' %}active{% endif %}">
+                    <span>What-If Analysis</span>
+                    <span class="novelty-tag">Novelty</span>
+                </a>
+                <a href="{{ url_for('report_page') }}" class="nav-link {% if request.endpoint == 'report_page' %}active{% endif %}">Report</a>
+            </nav>
+
+            <div class="nav-actions">
+                <a href="{{ url_for('predict_page') }}" class="btn btn-primary btn-sm">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                    </svg>
+                    <span>Analyze Scan</span>
+                </a>
+                <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle Navigation">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Flash Messages -->
+    <div class="container flash-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} animate-fade-in">
+                        <div class="alert-icon">
+                            {% if category == 'success' %}
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                            {% elif category == 'danger' %}
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                            {% else %}
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                            {% endif %}
+                        </div>
+                        <div class="alert-text">{{ message }}</div>
+                        <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Global Medical Disclaimer Banner -->
+    <div class="disclaimer-strip">
+        <div class="container disclaimer-content">
+            <div class="disclaimer-icon">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            </div>
+            <p>{{ DISCLAIMER }}</p>
+        </div>
+    </div>
+
+    <!-- Academic Footer -->
+    <footer class="footer">
+        <div class="container footer-grid">
+            <div class="footer-col">
+                <div class="brand footer-brand">
+                    <span class="brand-title">LUNG</span>
+                </div>
+                <p class="footer-desc">
+                    Final-Year Academic Capstone Research Project: Explainable Deep Learning Architecture for Lung Cancer Detection, Staging, and Counterfactual Causal Verification.
+                </p>
+            </div>
+            <div class="footer-col">
+                <h4>Pipeline Architecture</h4>
+                <ul>
+                    <li><a href="{{ url_for('predict_page') }}">Image Preprocessing & Validation</a></li>
+                    <li><a href="{{ url_for('predict_page') }}">CNN Inference & Detection</a></li>
+                    <li><a href="{{ url_for('result_page') }}">Grad-CAM Visual Attention Maps</a></li>
+                    <li><a href="{{ url_for('counterfactual_page') }}">What-If Perturbation Analysis</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Project Modules</h4>
+                <ul>
+                    <li><a href="{{ url_for('predict_page') }}">Diagnostic CT Screening</a></li>
+                    <li><a href="{{ url_for('result_page') }}">Explainability Saliency Maps</a></li>
+                    <li><a href="{{ url_for('counterfactual_page') }}">Causal What-If Testing</a></li>
+                    <li><a href="{{ url_for('report_page') }}">Clinical Evaluation Report</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="container footer-bottom">
+            <p>&copy; 2026 LUNG Project. Final Year Academic Research Demonstration. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Floating Chatbot Widget -->
+    <div class="chatbot-wrapper" id="chatbotWrapper">
+        <button class="chatbot-toggle-btn" id="chatbotToggleBtn" title="Ask Academic Assistant" aria-label="Open AI Assistant">
+            <div class="btn-bubble-icon">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+            </div>
+            <span class="btn-bubble-label">Ask XAI Assistant</span>
+        </button>
+
+        <div class="chatbot-window" id="chatbotWindow">
+            <div class="chatbot-header">
+                <div class="chatbot-header-info">
+                    <span class="status-dot"></span>
+                    <div>
+                        <h4 class="chatbot-title">XAI Project Assistant</h4>
+                        <span class="chatbot-subtitle">Academic & Clinical FAQ Engine</span>
+                    </div>
+                </div>
+                <button class="chatbot-close-btn" id="chatbotCloseBtn" aria-label="Close chat">&times;</button>
+            </div>
+
+            <div class="chatbot-messages" id="chatbotMessages">
+                <div class="chat-bubble bot-bubble">
+                    Hello! I'm your academic assistant for the <strong>Lung Cancer XAI & Counterfactual What-If</strong> project. How can I assist you with CNN detection, Grad-CAM, or causal perturbation today?
+                </div>
+            </div>
+
+            <!-- Suggestion Chips -->
+            <div class="chatbot-suggestions" id="chatbotSuggestions">
+                <!-- Injected via JavaScript -->
+            </div>
+
+            <form class="chatbot-input-bar" id="chatbotForm">
+                <input type="text" id="chatbotInput" placeholder="Ask about CNN, Grad-CAM, What-If..." autocomplete="off" required>
+                <button type="submit" id="chatbotSendBtn" aria-label="Send message">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main JavaScript -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

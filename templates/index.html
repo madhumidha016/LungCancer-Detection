@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Explainable AI for Lung Cancer Detection{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container hero-container">
+        <div class="hero-content">
+            <div class="hero-tag">
+                <span class="sparkle-icon">✨</span>
+                <span>Final-Year Academic Capstone Innovation</span>
+            </div>
+            <h1 class="hero-title">
+                Lung Cancer Detection & Staging Using CNN with 
+                <span class="gradient-text">Counterfactual What-If</span> Explainability
+            </h1>
+            <p class="hero-description">
+                A state-of-the-art academic framework combining Convolutional Neural Networks, 
+                Grad-CAM attention mapping, and <strong>transparent counterfactual lesion perturbation</strong> 
+                to verify causal diagnostic decisions on chest Computed Tomography (CT) scans.
+            </p>
+            <div class="hero-actions">
+                <a href="{{ url_for('predict_page') }}" class="btn btn-primary btn-lg">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                    </svg>
+                    <span>Analyze CT Image</span>
+                </a>
+                <a href="{{ url_for('counterfactual_page') }}" class="btn btn-secondary btn-lg">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 8v8M8 12h8"></path>
+                    </svg>
+                    <span>What-If Causal Analysis</span>
+                </a>
+            </div>
+
+            <!-- Quick Start Sample CT Form -->
+            <div class="quick-sample-box">
+                <span class="quick-sample-label">Instant One-Click Test:</span>
+                <div class="quick-sample-buttons">
+                    <form action="{{ url_for('predict_page') }}" method="POST" style="display:inline;">
+                        <input type="hidden" name="sample_choice" value="sample_cancer">
+                        <button type="submit" class="sample-chip sample-cancer-chip">
+                            <span class="dot-indicator danger"></span>
+                            <span>Test Suspicious CT (Malignancy Simulation)</span>
+                        </button>
+                    </form>
+                    <form action="{{ url_for('predict_page') }}" method="POST" style="display:inline;">
+                        <input type="hidden" name="sample_choice" value="sample_normal">
+                        <button type="submit" class="sample-chip sample-normal-chip">
+                            <span class="dot-indicator success"></span>
+                            <span>Test Normal CT (Clear Parenchyma)</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="hero-graphic">
+            <div class="graphic-card">
+                <div class="graphic-badge">Causal Verification Flow</div>
+                <div class="graphic-preview-grid">
+                    <div class="graphic-item">
+                        <span class="item-label">1. Original CT & Grad-CAM</span>
+                        <img src="{{ url_for('static', filename='images/sample_cancer.png') }}" alt="CT Slice with nodule" class="preview-thumb">
+                        <span class="badge-status danger">Cancer (88.4%)</span>
+                    </div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="graphic-item">
+                        <span class="item-label">2. What-If Mask Intervention</span>
+                        <div class="cf-simulated-thumb">
+                            <img src="{{ url_for('static', filename='images/sample_cancer.png') }}" alt="Perturbed scan" class="preview-thumb filter-cf">
+                            <div class="cf-lens-indicator" title="Focal Mask Applied"></div>
+                        </div>
+                        <span class="badge-status success">Normal (21.2%)</span>
+                    </div>
+                </div>
+                <div class="graphic-caption">
+                    <strong>Decision Flipped: YES</strong> (Causality verified via lesion attenuation)
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Core Novelty Spotlight Section -->
+<section class="novelty-section">
+    <div class="container">
+        <div class="section-header text-center">
+            <span class="section-kicker">Core Scientific Contribution</span>
+            <h2 class="section-title">Beyond Saliency Maps: Why Counterfactual What-If Matters</h2>
+            <p class="section-subtitle">
+                Standard Explainable AI (like Grad-CAM) shows <em>where</em> the neural network looked, but cannot prove <em>causality</em>. Our What-If engine performs surgical in-silico interventions to verify decision boundaries.
+            </p>
+        </div>
+
+        <div class="novelty-grid">
+            <div class="novelty-card">
+                <div class="novelty-icon-box cyan">
+                    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </div>
+                <h3>1. Correlation vs Causality</h3>
+                <p>
+                    Heatmaps often highlight confounding features or artifacts. Counterfactual analysis removes or alters the specific suspicious region to prove the network's mathematical dependence on the finding.
+                </p>
+            </div>
+
+            <div class="novelty-card">
+                <div class="novelty-icon-box purple">
+                    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="9" y1="3" x2="9" y2="21"></line>
+                    </svg>
+                </div>
+                <h3>2. Transparent Transformations</h3>
+                <p>
+                    Users can select between Gaussian blurring, anatomical tissue masking, or opacity attenuation with configurable intensity parameters (Low, Medium, High).
+                </p>
+            </div>
+
+            <div class="novelty-card">
+                <div class="novelty-icon-box emerald">
+                    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                </div>
+                <h3>3. True Re-Inference</h3>
+                <p>
+                    The modified image is passed through the identical CNN inference pipeline. We compute real probability deltas and test whether the final diagnosis changes from Cancer to Normal.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- End-to-End Workflow Section -->
+<section class="workflow-section">
+    <div class="container">
+        <div class="section-header text-center">
+            <span class="section-kicker">Clinical & Computational Pipeline</span>
+            <h2 class="section-title">The Complete 8-Stage Research Workflow</h2>
+        </div>
+
+        <div class="timeline-steps">
+            <div class="timeline-step">
+                <div class="step-number">01</div>
+                <h4>Input & Validation</h4>
+                <p>Upload DICOM/PNG/JPEG thoracic CT slice with format verification and MIME validation.</p>
+            </div>
+            <div class="timeline-step">
+                <div class="step-number">02</div>
+                <h4>Preprocessing</h4>
+                <p>Bilinear/Lanczos 224x224 standardization, RGB conversion, and normalized float32 tensor generation.</p>
+            </div>
+            <div class="timeline-step">
+                <div class="step-number">03</div>
+                <h4>CNN Detection</h4>
+                <p>Deep feature extraction classifying Normal vs Cancer with calibrated softmax probabilities.</p>
+            </div>
+            <div class="timeline-step">
+                <div class="step-number">04</div>
+                <h4>Grad-CAM XAI</h4>
+                <p>Gradient-weighted class activation mapping producing visual Jet colormap diagnostic overlays.</p>
+            </div>
+            <div class="timeline-step step-highlight">
+                <div class="step-number">05</div>
+                <h4>What-If Intervention</h4>
+                <p>Focal masking or blurring of suspicious lesion guided by Grad-CAM bounding coordinates.</p>
+            </div>
+            <div class="timeline-step">
+                <div class="step-number">06</div>
+                <h4>Model Re-Evaluation</h4>
+                <p>Re-running perturbed scan through CNN to measure causal probability shift and decision flips.</p>
+            </div>
+            <div class="timeline-step">
+                <div class="step-number">07</div>
+                <h4>Optional Staging</h4>
+                <p>TNM stage estimation (Stage I-IV) triggered when Cancer probability exceeds threshold.</p>
+            </div>
+            <div class="timeline-step">
+                <div class="step-number">08</div>
+                <h4>Report & Export</h4>
+                <p>Automated compilation of formal academic report with downloadable technical documentation.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to action -->
+<section class="cta-section">
+    <div class="container cta-container">
+        <div class="cta-card">
+            <h2>Ready to Test the Explainability Architecture?</h2>
+            <p>Upload a thoracic CT scan or choose one of our verified benchmark slices to inspect the Grad-CAM and What-If causal pipeline in real time.</p>
+            <div class="cta-buttons">
+                <a href="{{ url_for('predict_page') }}" class="btn btn-primary btn-lg">Launch Detection & XAI Pipeline</a>
+                <a href="{{ url_for('report_page') }}" class="btn btn-secondary btn-lg">View Clinical Report</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

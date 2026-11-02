@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}About & Academic Methodology{% endblock %}
+
+{% block content %}
+<div class="container page-header">
+    <span class="section-kicker">Academic Project Documentation</span>
+    <h1 class="page-title">Research Methodology & Technical Architecture</h1>
+    <p class="page-subtitle">
+        Detailed theoretical formulation of CNN detection, Grad-CAM visual attention mapping, 
+        and Counterfactual What-If causal perturbation analysis for thoracic oncology.
+    </p>
+</div>
+
+<div class="container academic-content">
+    <!-- Section 1: Overview & Objectives -->
+    <div class="card content-card">
+        <div class="card-header-flex">
+            <h2>1. Research Objectives & Problem Statement</h2>
+            <span class="badge badge-info">Academic Capstone</span>
+        </div>
+        <p>
+            Lung cancer remains one of the leading causes of cancer-related mortality globally. While deep convolutional neural networks (CNNs) have achieved outstanding performance in detecting pulmonary nodules on Computed Tomography (CT), clinical adoption is often hindered by the <em>"black-box"</em> dilemma. Clinicians must understand not only <strong>what</strong> the model predicted, but <strong>why</strong> it made that determination.
+        </p>
+        <p>
+            This project bridges that gap by introducing <strong>Counterfactual What-If Explainability</strong>. In addition to producing traditional visual saliency maps via Grad-CAM, the system applies controlled spatial perturbations (masking, blurring, attenuation) to suspicious regions and re-evaluates the modified CT scan through the identical neural network. This allows researchers to verify whether the detected nodule was the true mathematical cause of the malignancy classification.
+        </p>
+    </div>
+
+    <!-- Section 2: CNN Architecture -->
+    <div class="card content-card">
+        <h2>2. Convolutional Neural Network (CNN) Pipeline</h2>
+        <p>
+            The detection architecture processes standardized $224 \times 224 \times 3$ axial CT image slices. The network applies hierarchical feature extraction:
+        </p>
+        <div class="grid-2-col" style="margin: 1.5rem 0;">
+            <div class="sub-card">
+                <h4>Feature Extraction Layers</h4>
+                <p>
+                    Stacked 2D convolutional layers with batch normalization and LeakyReLU activations extract textural variations, edge contours of thoracic organs, and localized hyperdensities within the lung parenchyma.
+                </p>
+            </div>
+            <div class="sub-card">
+                <h4>Classification Head</h4>
+                <p>
+                    Global average pooling aggregates spatial feature maps into dense representations, followed by dropout regularization and a 2-class Softmax layer producing calibrated confidence probabilities for <code>Normal</code> and <code>Cancer</code>.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 3: Grad-CAM Formulation -->
+    <div class="card content-card">
+        <h2>3. Grad-CAM (Gradient-Weighted Class Activation Mapping)</h2>
+        <p>
+            Grad-CAM visualizes the coarse 2D attention distribution of the final convolutional layer for a given target class $c \in \{\text{Normal}, \text{Cancer}\}$:
+        </p>
+        <div class="math-box">
+            <p><strong>Step 1: Neuron Importance Weight Calculation ($\alpha_k^c$)</strong></p>
+            <code>&alpha;<sub>k</sub><sup>c</sup> = (1 / Z) &sum;<sub>i</sub> &sum;<sub>j</sub> (&part;y<sup>c</sup> / &part;A<sub>i,j</sub><sup>k</sup>)</code>
+            <p style="margin-top: 0.5rem; font-size: 0.9rem; color: var(--text-muted);">
+                where $Z$ is the spatial area of the feature map, $y^c$ is the class score before softmax, and $A^k$ is feature map $k$.
+            </p>
+            <p style="margin-top: 1rem;"><strong>Step 2: Linear Combination & Rectified Linear Activation (ReLU)</strong></p>
+            <code>L<sub>Grad-CAM</sub><sup>c</sup> = ReLU( &sum;<sub>k</sub> &alpha;<sub>k</sub><sup>c</sup> A<sup>k</sup> )</code>
+            <p style="margin-top: 0.5rem; font-size: 0.9rem; color: var(--text-muted);">
+                The ReLU operator ensures that only features having a positive correlation with the target class are retained in the heatmap.
+            </p>
+        </div>
+    </div>
+
+    <!-- Section 4: Counterfactual What-If Novelty -->
+    <div class="card content-card highlight-card">
+        <div class="card-header-flex">
+            <h2>4. Counterfactual What-If Analysis (The Primary Novelty)</h2>
+            <span class="novelty-tag">Core Novelty</span>
+        </div>
+        <p>
+            Traditional Explainable AI methods provide <em>observational correlation</em> rather than <em>causation</em>. Counterfactual analysis asks:
+        </p>
+        <blockquote class="academic-quote">
+            "What would the CNN's diagnosis have been if the suspicious pulmonary nodule had not been present or had lower soft-tissue attenuation?"
+        </blockquote>
+        <p>
+            Our What-If engine implements three transparent, clinical-grade transformations:
+        </p>
+        <div class="grid-3-col" style="margin: 1.5rem 0;">
+            <div class="sub-card">
+                <h4>A. Tissue Masking</h4>
+                <p>
+                    Replaces high-density nodular pixels with healthy surrounding aerated lung parenchyma density (-800 HU baseline equivalent).
+                </p>
+            </div>
+            <div class="sub-card">
+                <h4>B. Gaussian Blurring</h4>
+                <p>
+                    Smooths high-frequency spiculation borders, dissolving nodule margins to test network sensitivity to border irregularities.
+                </p>
+            </div>
+            <div class="sub-card">
+                <h4>C. Intensity Attenuation</h4>
+                <p>
+                    Linearly reduces radiodensity within the lesion volume, simulating tumor regression or early anti-neoplastic response.
+                </p>
+            </div>
+        </div>
+        <p>
+            <strong>Causal Verification:</strong> If the model's malignancy probability drops significantly and flips from <code>Cancer</code> to <code>Normal</code> upon perturbation, the suspicious region is mathematically verified as the causal driver of the original prediction.
+        </p>
+    </div>
+
+    <!-- Section 5: Staging -->
+    <div class="card content-card" id="staging">
+        <h2>5. Optional TNM Cancer Staging</h2>
+        <p>
+            For cases where the primary detector determines a high probability of malignancy ($P(\text{Cancer}) \ge 50\%$), the pipeline initiates an optional staging module categorizing the lesion according to the International Association for the Study of Lung Cancer (IASLC) TNM classification:
+        </p>
+        <ul>
+            <li><strong>Stage I:</strong> Localized solitary lesion ($\le 3$ cm) without nodal or distant metastasis.</li>
+            <li><strong>Stage II:</strong> Localized tumor with ipsilateral peribronchial/hilar lymph node involvement.</li>
+            <li><strong>Stage III:</strong> Locally advanced tumor with mediastinal nodal involvement.</li>
+            <li><strong>Stage IV:</strong> Advanced tumor with pleural dissemination or distant organ metastasis.</li>
+        </ul>
+        <p class="text-muted" style="margin-top: 0.5rem;">
+            <em>Note: If a trained staging model file is not available in the <code>models/</code> folder, the system safely bypasses this step without interrupting detection or What-If analysis.</em>
+        </p>
+    </div>
+
+    <!-- Section 6: Model Integration Guide -->
+    <div class="card content-card">
+        <h2>6. Connecting Real Trained Models</h2>
+        <p>
+            The application is built with a plug-and-play architecture. To deploy a real trained Keras/TensorFlow model:
+        </p>
+        <ol class="custom-list">
+            <li>Export your trained CNN weights as <code>lung_cancer_cnn.keras</code> or <code>lung_cancer_cnn.h5</code>.</li>
+            <li>Place the file into the <code>models/</code> directory at the project root.</li>
+            <li>Ensure the model expects input shape <code>(None, 224, 224, 3)</code> and produces binary or 2-class softmax outputs.</li>
+            <li>Restart the Flask server. The application will automatically detect and load the real model, switching from Demo Mode to <code>REAL MODEL LOADED</code>.</li>
+        </ol>
+    </div>
+
+    <!-- Section 7: Medical Safety & Research Ethics -->
+    <div class="card content-card" id="safety">
+        <h2>7. Ethical Compliance & Medical Safety</h2>
+        <div class="alert alert-warning" style="margin-top: 1rem;">
+            <p><strong>Regulatory Notice:</strong> {{ DISCLAIMER }}</p>
+        </div>
+        <p style="margin-top: 1rem;">
+            This software is an academic capstone prototype developed solely to advance research in Explainable Artificial Intelligence (XAI) and counterfactual diagnostic reasoning. It has not undergone clinical trials, FDA 510(k) clearance, or CE mark certification, and is strictly prohibited from use in clinical diagnostic decisions.
+        </p>
+    </div>
+</div>
+{% endblock %}

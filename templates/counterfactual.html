@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}Counterfactual What-If Analysis (Core Novelty){% endblock %}
+
+{% block content %}
+<div class="container page-header">
+    <div class="result-header-row">
+        <div>
+            <div class="hero-tag">
+                <span class="sparkle-icon">🔬</span>
+                <span>Core Research Innovation: Causal Perturbation</span>
+            </div>
+            <h1 class="page-title">Counterfactual What-If Explainable Analysis</h1>
+            <p class="page-subtitle">
+                Modifying suspicious regions in-silico and re-evaluating through the identical CNN detector to verify causal decision boundaries.
+            </p>
+        </div>
+        <div class="header-action-btns">
+            <a href="{{ url_for('report_page') }}" class="btn btn-secondary btn-lg">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+                <span>Generate Academic Report</span>
+            </a>
+            <a href="{{ url_for('result_page') }}" class="btn btn-secondary btn-lg">Back to Grad-CAM</a>
+        </div>
+    </div>
+</div>
+
+<div class="container cf-layout">
+    <!-- Interactive What-If Intervention Control Bar -->
+    <div class="card cf-control-card">
+        <div class="card-header-flex">
+            <div>
+                <h3>Configure What-If In-Silico Intervention</h3>
+                <p class="card-subtext">Choose how to perturb the suspicious region identified by Grad-CAM.</p>
+            </div>
+            <span class="badge badge-primary">Perturbation Controls</span>
+        </div>
+
+        <form action="{{ url_for('counterfactual_page') }}" method="POST" id="cfForm" class="cf-form">
+            <div class="cf-form-grid">
+                <!-- Mode Selection -->
+                <div class="form-group">
+                    <label class="form-label" for="modeSelect">
+                        <strong>Transformation Mode:</strong>
+                    </label>
+                    <select name="mode" id="modeSelect" class="form-control select-custom">
+                        {% for m in modes %}
+                        <option value="{{ m }}" {% if cf_res and cf_res.mode == m %}selected{% elif not cf_res and loop.first %}selected{% endif %}>
+                            {{ m }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <small class="form-hint">
+                        Masking replaces lesion with healthy tissue; Blurring removes sharp nodular edges; Attenuation reduces radiodensity.
+                    </small>
+                </div>
+
+                <!-- Strength Selection -->
+                <div class="form-group">
+                    <label class="form-label" for="strengthSelect">
+                        <strong>Intervention Strength:</strong>
+                    </label>
+                    <div class="strength-pills">
+                        {% for s in strengths %}
+                        <label class="strength-pill-label">
+                            <input type="radio" name="strength" value="{{ s }}" {% if cf_res and cf_res.strength_label == s %}checked{% elif not cf_res and s == 'Medium' %}checked{% endif %}>
+                            <span class="strength-pill-text">{{ s }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    <small class="form-hint">
+                        Controls the blending coefficient &amp; spatial extent of lesion modification.
+                    </small>
+                </div>
+
+                <!-- Run Button -->
+                <div class="form-group btn-align-bottom">
+                    <button type="submit" class="btn btn-novelty btn-block btn-lg" id="runCfBtn">
+                        <span class="btn-text">Apply What-If &amp; Re-Infer CNN</span>
+                        <span class="spinner" id="cfSpinner" style="display: none;"></span>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- What-If Results Section -->
+    {% if cf_res %}
+    <!-- Verdict Banner -->
+    <div class="verdict-banner {% if cf_res.prediction_changed %}banner-changed{% else %}banner-unchanged{% endif %} animate-fade-in">
+        <div class="verdict-icon">
+            {% if cf_res.prediction_changed %}
+            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#10b981" stroke-width="2.2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            {% else %}
+            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#38bdf8" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            {% endif %}
+        </div>
+        <div class="verdict-text-area">
+            <div class="verdict-title-row">
+                <h3>Prediction Changed: <span class="verdict-verdict">{{ cf_res.prediction_changed_str }}</span></h3>
+                <span class="verdict-shift-badge">
+                    Cancer Prob: {{ cf_res.original_cancer_probability_pct }}% &rarr; {{ cf_res.counterfactual_cancer_probability_pct }}%
+                    ({{ cf_res.confidence_change_pct }}%)
+                </span>
+            </div>
+            <p class="verdict-narrative">{{ cf_res.explanation }}</p>
+        </div>
+    </div>
+
+    <!-- Side-by-Side Visual Comparison (Original vs Counterfactual) -->
+    <div class="card comparison-visual-card animate-fade-in">
+        <div class="card-header-flex">
+            <h3>Visual Evidence: Original vs Counterfactual CT</h3>
+            <span class="badge badge-info">True In-Silico Comparison</span>
+        </div>
+
+        <div class="side-by-side-grid">
+            <!-- Left: Original Image -->
+            <div class="ct-compare-box">
+                <div class="ct-compare-header">
+                    <span class="compare-tag">State 1: Baseline</span>
+                    <h4>Original Thoracic CT</h4>
+                </div>
+                <div class="ct-img-wrapper">
+                    <img src="{{ url_for('serve_generated', filename=analysis.display_filename) }}" alt="Original CT" class="ct-compare-img">
+                </div>
+                <div class="ct-metrics-footer">
+                    <div class="metric-line">
+                        <span>Prediction:</span>
+                        <strong class="{% if cf_res.original_class == 'Cancer' %}font-danger{% else %}font-success{% endif %}">
+                            {{ cf_res.original_class }}
+                        </strong>
+                    </div>
+                    <div class="metric-line">
+                        <span>Confidence:</span>
+                        <strong>{{ cf_res.original_confidence_pct }}%</strong>
+                    </div>
+                    <div class="metric-line">
+                        <span>Cancer Probability:</span>
+                        <strong class="font-danger">{{ cf_res.original_cancer_probability_pct }}%</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center Transformation Indicator -->
+            <div class="cf-transform-center">
+                <div class="intervention-pill">
+                    <span class="pill-label">Applied Intervention</span>
+                    <span class="pill-mode">{{ cf_res.mode }}</span>
+                    <span class="pill-strength">Strength: {{ cf_res.strength_label }}</span>
+                </div>
+                <div class="cf-arrow-symbol">&rarr;</div>
+                <div class="cf-delta-badge {% if cf_res.confidence_change < 0 %}delta-drop{% else %}delta-rise{% endif %}">
+                    &Delta; {{ cf_res.confidence_change_pct }}%
+                </div>
+            </div>
+
+            <!-- Right: Counterfactual Image -->
+            <div class="ct-compare-box cf-active-box">
+                <div class="ct-compare-header">
+                    <span class="compare-tag tag-cf">State 2: Perturbed (What-If)</span>
+                    <h4>Counterfactual Modified CT</h4>
+                </div>
+                <div class="ct-img-wrapper">
+                    <img src="{{ url_for('serve_generated', filename=cf_res.cf_filename) }}" alt="Counterfactual CT" class="ct-compare-img">
+                </div>
+                <div class="ct-metrics-footer">
+                    <div class="metric-line">
+                        <span>Re-evaluated Class:</span>
+                        <strong class="{% if cf_res.counterfactual_class == 'Cancer' %}font-danger{% else %}font-success{% endif %}">
+                            {{ cf_res.counterfactual_class }}
+                        </strong>
+                    </div>
+                    <div class="metric-line">
+                        <span>Re-evaluated Confidence:</span>
+                        <strong>{{ cf_res.counterfactual_confidence_pct }}%</strong>
+                    </div>
+                    <div class="metric-line">
+                        <span>Cancer Probability:</span>
+                        <strong class="font-danger">{{ cf_res.counterfactual_cancer_probability_pct }}%</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Probability Shift Comparison Chart & Key Metrics -->
+    <div class="grid-2-col" style="margin-top: 1.5rem;">
+        <!-- Matplotlib Generated Comparison Chart -->
+        <div class="card chart-card animate-fade-in">
+            <div class="card-header-flex">
+                <h3>Probability Distribution Shift</h3>
+                <span class="badge badge-primary">Matplotlib Analytics</span>
+            </div>
+            {% if chart_filename %}
+            <div class="chart-img-container">
+                <img src="{{ url_for('serve_generated', filename=chart_filename) }}" alt="Probability Comparison Chart" class="comparison-chart-img">
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Academic Insights & Causal Significance -->
+        <div class="card insights-card animate-fade-in">
+            <div class="card-header-flex">
+                <h3>Academic &amp; Clinical Significance</h3>
+                <span class="badge badge-success">Causal Verification</span>
+            </div>
+            <div class="insights-body">
+                <div class="insight-row">
+                    <span class="insight-title">Hypothesis Tested:</span>
+                    <p>
+                        Does the CNN diagnosis depend causally on the radiodense lesion in the highlighted region, or was the model triggering on secondary vascular features?
+                    </p>
+                </div>
+                <div class="insight-row">
+                    <span class="insight-title">Observed Causal Response:</span>
+                    <p>
+                        Modifying the localized tissue reduced the cancer probability by <strong>{{ cf_res.abs_change_pct }}%</strong>.
+                        {% if cf_res.prediction_changed %}
+                        This successfully crossed the 50% decision threshold, flipping the classification from <strong>{{ cf_res.original_class }}</strong> to <strong>{{ cf_res.counterfactual_class }}</strong>.
+                        {% else %}
+                        The diagnosis remained <strong>{{ cf_res.counterfactual_class }}</strong>, indicating residual feature influence or requiring higher intervention strength.
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="insight-row">
+                    <span class="insight-title">XAI Verification Verdict:</span>
+                    <p>
+                        {% if cf_res.prediction_changed %}
+                        <span class="badge badge-success">Causally Validated</span> The identified lesion is confirmed as the primary causal determinant for the original diagnosis.
+                        {% else %}
+                        <span class="badge badge-info">Partially Sensitive</span> The model is sensitive to this area, but secondary evidence contributes to the classification.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Next actions -->
+            <div style="margin-top: 1.5rem;">
+                <a href="{{ url_for('report_page') }}" class="btn btn-primary btn-block btn-lg">
+                    <span>Compile &amp; Download Academic Report ➔</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Initial Prompt to run What-If -->
+    <div class="card prompt-card text-center" style="padding: 3rem 1.5rem;">
+        <div class="prompt-icon">🔍</div>
+        <h3>No Counterfactual Perturbation Executed Yet</h3>
+        <p class="text-muted" style="max-width: 600px; margin: 0.5rem auto 1.5rem auto;">
+            Select your desired modification mode and strength above, then click <strong>"Apply What-If &amp; Re-Infer CNN"</strong> to observe how the neural network's diagnostic probabilities react to lesion modification.
+        </p>
+        <button type="button" class="btn btn-novelty btn-lg" onclick="document.getElementById('cfForm').scrollIntoView({behavior: 'smooth'})">
+            Configure Intervention Above
+        </button>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

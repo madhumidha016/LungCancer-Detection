@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}Detection & Grad-CAM Results{% endblock %}
+
+{% block content %}
+<div class="container page-header">
+    <div class="result-header-row">
+        <div>
+            <span class="section-kicker">Stage 3 & 4: Detection & Explainability</span>
+            <h1 class="page-title">Diagnostic Inference & Grad-CAM Analysis</h1>
+        </div>
+        <div class="header-action-btns">
+            <a href="{{ url_for('counterfactual_page') }}" class="btn btn-novelty btn-lg pulse-glow">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 8v8M8 12h8"></path>
+                </svg>
+                <span>Run Counterfactual What-If Analysis</span>
+            </a>
+            <a href="{{ url_for('report_page') }}" class="btn btn-secondary btn-lg">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+                <span>View Full Report</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container result-layout">
+    <!-- Top Summary Card: Prediction Metrics -->
+    <div class="card result-summary-card">
+        <div class="summary-top">
+            <div class="classification-box">
+                <span class="metric-label">Predicted Classification</span>
+                <div class="classification-pill {% if detection.predicted_class == 'Cancer' %}pill-danger{% else %}pill-success{% endif %}">
+                    <span class="pill-dot"></span>
+                    <span class="pill-class-name">{{ detection.predicted_class }}</span>
+                </div>
+            </div>
+
+            <div class="confidence-box">
+                <span class="metric-label">Inference Confidence</span>
+                <div class="confidence-value">{{ detection.confidence_pct }}%</div>
+            </div>
+
+            <div class="model-mode-box">
+                <span class="metric-label">Operating Engine</span>
+                {% if detection.is_demo %}
+                <span class="engine-badge demo">Demo Simulation</span>
+                {% else %}
+                <span class="engine-badge live">Trained CNN Active</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Class Probabilities Dual Bar -->
+        <div class="probability-section">
+            <div class="prob-row">
+                <div class="prob-header">
+                    <span class="prob-name">Cancer Probability</span>
+                    <span class="prob-val font-danger">{{ detection.cancer_probability_pct }}%</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-bar progress-danger" style="width: {{ detection.cancer_probability_pct }}%;"></div>
+                </div>
+            </div>
+
+            <div class="prob-row">
+                <div class="prob-header">
+                    <span class="prob-name">Normal Probability</span>
+                    <span class="prob-val font-success">{{ detection.normal_probability_pct }}%</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-bar progress-success" style="width: {{ detection.normal_probability_pct }}%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Visual Tri-Gallery: Original vs Heatmap vs Overlay -->
+    <div class="card gallery-card">
+        <div class="card-header-flex">
+            <div>
+                <h3>Visual Evidence & Gradient Activation (Grad-CAM)</h3>
+                <p class="card-subtext">Spatial localization of convolutional receptive fields influencing network inference.</p>
+            </div>
+            <span class="badge badge-primary">XAI Tri-View</span>
+        </div>
+
+        <div class="visual-tri-grid">
+            <!-- 1. Original CT -->
+            <div class="visual-box">
+                <div class="visual-header">
+                    <span class="visual-tag">Figure 1</span>
+                    <h4>Preprocessed CT Slice</h4>
+                </div>
+                <div class="visual-img-container">
+                    <img src="{{ url_for('serve_generated', filename=analysis.display_filename) }}" alt="Preprocessed CT Slice" class="visual-img">
+                </div>
+                <div class="visual-footer">
+                    <span>Input: 224&times;224 RGB Normalized</span>
+                </div>
+            </div>
+
+            <!-- 2. Grad-CAM Heatmap -->
+            <div class="visual-box">
+                <div class="visual-header">
+                    <span class="visual-tag">Figure 2</span>
+                    <h4>Grad-CAM Heatmap</h4>
+                </div>
+                <div class="visual-img-container">
+                    {% if gradcam.success and gradcam.heatmap_filename %}
+                    <img src="{{ url_for('serve_generated', filename=gradcam.heatmap_filename) }}" alt="Grad-CAM Heatmap" class="visual-img">
+                    {% else %}
+                    <div class="visual-placeholder">Grad-CAM unavailable</div>
+                    {% endif %}
+                </div>
+                <div class="visual-footer">
+                    <span>Jet Colormap (Peak Activation)</span>
+                </div>
+            </div>
+
+            <!-- 3. Diagnostic Overlay -->
+            <div class="visual-box">
+                <div class="visual-header">
+                    <span class="visual-tag">Figure 3</span>
+                    <h4>Diagnostic Overlay</h4>
+                </div>
+                <div class="visual-img-container">
+                    {% if gradcam.success and gradcam.overlay_filename %}
+                    <img src="{{ url_for('serve_generated', filename=gradcam.overlay_filename) }}" alt="Grad-CAM Overlay" class="visual-img">
+                    {% else %}
+                    <div class="visual-placeholder">Overlay unavailable</div>
+                    {% endif %}
+                </div>
+                <div class="visual-footer">
+                    <span>&alpha; = 0.42 Anatomical Blend</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interpretability Note -->
+        <div class="xai-interpretation-box">
+            <div class="xai-icon">💡</div>
+            <div class="xai-text">
+                <strong>Explainability Interpretation:</strong>
+                {% if detection.predicted_class == 'Cancer' %}
+                The convolutional feature maps highlight intense activation (red/warm spectrum) concentrated over the suspicious pulmonary nodule/opacity. This region exerted the highest gradient weight towards the <code>Cancer</code> classification score.
+                {% else %}
+                The Grad-CAM attention is diffusely distributed across clear thoracic parenchyma with no localized focal peaks exceeding the malignancy threshold, supporting the <code>Normal</code> diagnosis.
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Two-Column: Optional Staging & Next Steps Callout -->
+    <div class="grid-2-col" style="margin-top: 1.5rem;">
+        <!-- Staging Card -->
+        <div class="card staging-card">
+            <div class="card-header-flex">
+                <div>
+                    <span class="novelty-tag" style="background: rgba(14, 165, 233, 0.15); color: var(--color-accent); border: 1px solid rgba(14, 165, 233, 0.35);">Prognostic Module</span>
+                    <h3 style="margin-top: 0.35rem;">TNM Staging Assessment</h3>
+                </div>
+                {% if staging.eligible and staging.available %}
+                <span class="badge badge-success">CNN Staging Active</span>
+                {% else %}
+                <span class="badge badge-info">Optional Module</span>
+                {% endif %}
+            </div>
+
+            {% if staging.eligible and staging.available %}
+            <div class="staging-result-box">
+                <div class="staging-badge-row">
+                    <div class="staging-badge">{{ staging.stage }}</div>
+                    {% if staging.tnm_code and staging.tnm_code != 'N/A' %}
+                    <span class="staging-tnm-pill">{{ staging.tnm_code }}</span>
+                    {% endif %}
+                </div>
+
+                <p class="staging-msg">Model Confidence: <strong>{{ staging.confidence }}%</strong></p>
+
+                {% if staging.tnm_description %}
+                <div class="staging-clinical-note">
+                    <p><strong>Pathological Criteria:</strong> {{ staging.tnm_description }}</p>
+                    {% if staging.lesion_diameter_mm and staging.lesion_diameter_mm != 'N/A' %}
+                    <p class="staging-subtext">Estimated Focal Dimension: <strong>~{{ staging.lesion_diameter_mm }} mm</strong> &bull; AJCC 8th Edition Classification</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- 4-Stage Probability Distribution Bars -->
+                {% if staging.probabilities %}
+                <div class="staging-distribution">
+                    <div class="staging-dist-title">Multi-Class Stage Probability Distribution:</div>
+                    <div class="staging-bars-grid">
+                        {% for st_name, st_prob in staging.probabilities.items() %}
+                        <div class="staging-bar-item">
+                            <div class="staging-bar-label">
+                                <span>{{ st_name }}</span>
+                                <strong>{{ st_prob }}%</strong>
+                            </div>
+                            <div class="staging-bar-track">
+                                <div class="staging-bar-fill {% if st_name == staging.stage %}fill-active{% endif %}" style="width: {{ st_prob }}%;"></div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if staging.treatment_strategy %}
+                <div class="staging-guidance-box">
+                    <strong>Standard Clinical Protocol:</strong> {{ staging.treatment_strategy }}
+                </div>
+                {% endif %}
+            </div>
+            {% elif staging.available and not staging.eligible %}
+            <div class="staging-not-eligible">
+                <div class="staging-icon" style="font-size: 2rem; margin-bottom: 0.5rem;">🩺</div>
+                <h4>TNM Staging Deferred</h4>
+                <p>{{ staging.message }}</p>
+                <span class="text-muted" style="font-size: 0.85rem; display: block; margin-top: 0.5rem;">
+                    TNM staging is indicated upon detection of suspicious pulmonary opacities.
+                </span>
+            </div>
+            {% else %}
+            <div class="staging-fallback-box">
+                <div class="staging-icon">ℹ️</div>
+                <div>
+                    <h4>Staging Module Status</h4>
+                    <p>{{ staging.message }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Next Action Card: Counterfactual What-If Launch -->
+        <div class="card action-callout-card">
+            <div class="callout-header">
+                <span class="novelty-tag">Scientific Novelty</span>
+                <h3>Test Causal Dependence (What-If)</h3>
+            </div>
+            <p>
+                Does the neural network genuinely rely on the highlighted lesion, or is it an observational coincidence? 
+                Perturb the suspicious region (mask, blur, attenuate) to observe how the model re-evaluates the scan.
+            </p>
+            <div style="margin-top: 1.5rem;">
+                <a href="{{ url_for('counterfactual_page') }}" class="btn btn-novelty btn-block btn-lg">
+                    <span>Proceed to Counterfactual What-If Analysis ➔</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

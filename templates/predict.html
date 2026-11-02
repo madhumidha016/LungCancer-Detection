@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Upload & Predict - Lung Cancer Detection{% endblock %}
+
+{% block content %}
+<div class="container page-header">
+    <span class="section-kicker">Stage 1 & 2: Ingestion & Inference</span>
+    <h1 class="page-title">Thoracic CT Scan Analysis</h1>
+    <p class="page-subtitle">
+        Upload an axial chest CT slice or choose from benchmark samples to initiate CNN detection, 
+        Grad-CAM visual localization, and subsequent Counterfactual What-If perturbation.
+    </p>
+</div>
+
+<div class="container upload-grid">
+    <!-- Left Column: File Upload Form -->
+    <div class="card upload-card">
+        <div class="card-header-flex">
+            <h3>Upload CT Image File</h3>
+            <span class="badge badge-primary">Standard Ingestion</span>
+        </div>
+
+        <form action="{{ url_for('predict_page') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
+            <div class="drop-zone" id="dropZone">
+                <input type="file" name="file" id="fileInput" class="file-input" accept=".png,.jpg,.jpeg,.webp,.bmp,.tiff,.dcm" required>
+                <div class="drop-zone-content" id="dropZoneContent">
+                    <div class="drop-icon">
+                        <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                        </svg>
+                    </div>
+                    <h4>Drag and drop CT slice here</h4>
+                    <p>or <span class="browse-link">browse files</span> from your computer</p>
+                    <span class="file-specs">Supported: PNG, JPG, JPEG, WEBP, BMP, TIFF, DCM (Max 16MB)</span>
+                </div>
+
+                <!-- Preview Area -->
+                <div class="drop-preview-area" id="previewArea" style="display: none;">
+                    <img id="imagePreview" src="#" alt="CT Preview" class="preview-img">
+                    <div class="preview-meta">
+                        <span id="previewName" class="preview-filename">image.png</span>
+                        <span id="previewSize" class="preview-filesize">0 KB</span>
+                        <button type="button" class="btn-clear-preview" id="clearPreviewBtn" title="Remove selected file">&times;</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload Submit Button -->
+            <button type="submit" class="btn btn-primary btn-block btn-lg" id="submitBtn" style="margin-top: 1.5rem;">
+                <span class="btn-text">Run CNN Detection & XAI Pipeline</span>
+                <span class="spinner" id="btnSpinner" style="display: none;"></span>
+            </button>
+        </form>
+    </div>
+
+    <!-- Right Column: Benchmark Sample Selector & Guidelines -->
+    <div class="card samples-card">
+        <div class="card-header-flex">
+            <h3>Instant Benchmark CT Samples</h3>
+            <span class="badge badge-success">Preloaded</span>
+        </div>
+        <p class="text-muted" style="font-size: 0.92rem; margin-bottom: 1.25rem;">
+            No CT file ready? Test the complete detection and Counterfactual What-If workflow instantly with these calibrated thoracic slices:
+        </p>
+
+        <div class="sample-selection-grid">
+            <!-- Sample 1: Cancer with Nodule -->
+            <form action="{{ url_for('predict_page') }}" method="POST" class="sample-form-card">
+                <input type="hidden" name="sample_choice" value="sample_cancer">
+                <div class="sample-img-wrapper">
+                    <img src="{{ url_for('static', filename='images/sample_cancer.png') }}" alt="Suspicious CT Scan" class="sample-thumb">
+                    <span class="sample-badge danger">Suspicious Lesion</span>
+                </div>
+                <div class="sample-info">
+                    <h4>Suspicious Pulmonary Nodule</h4>
+                    <p>Features a dense, spiculated lesion in the right lung with ground-glass opacity margin.</p>
+                    <button type="submit" class="btn btn-secondary btn-sm btn-block">Analyze Malignancy CT</button>
+                </div>
+            </form>
+
+            <!-- Sample 2: Normal Clear Lung -->
+            <form action="{{ url_for('predict_page') }}" method="POST" class="sample-form-card">
+                <input type="hidden" name="sample_choice" value="sample_normal">
+                <div class="sample-img-wrapper">
+                    <img src="{{ url_for('static', filename='images/sample_normal.png') }}" alt="Normal CT Scan" class="sample-thumb">
+                    <span class="sample-badge success">Normal Lung</span>
+                </div>
+                <div class="sample-info">
+                    <h4>Normal Aerated Parenchyma</h4>
+                    <p>Clean bilateral lung fields with regular vascular branching and no focal opacities.</p>
+                    <button type="submit" class="btn btn-secondary btn-sm btn-block">Analyze Normal CT</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Ingestion Pipeline Guidelines -->
+        <div class="guidelines-box">
+            <h4>Preprocessing Pipeline Specifications:</h4>
+            <ul>
+                <li>Input image is converted to 3-channel RGB representation.</li>
+                <li>Resampled to calibrated CNN input dimension (224 &times; 224 pixels).</li>
+                <li>Pixel values normalized to float32 domain [0.0, 1.0].</li>
+                <li>Automatic Grad-CAM and Staging thresholds evaluated upon inference.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

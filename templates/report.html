@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block title %}Academic Evaluation Report - LUNG{% endblock %}
+
+{% block content %}
+<div class="container page-header no-print">
+    <div class="result-header-row">
+        <div>
+            <span class="section-kicker">Stage 8: Comprehensive Documentation</span>
+            <h1 class="page-title">Academic &amp; Clinical XAI Evaluation Report</h1>
+        </div>
+        <div class="header-action-btns">
+            <a href="{{ url_for('download_report', filename=report_filename) }}" class="btn btn-primary btn-lg">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                </svg>
+                <span>Download Report (.txt)</span>
+            </a>
+            <button type="button" class="btn btn-secondary btn-lg" onclick="window.print()">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                    <rect x="6" y="14" width="12" height="8"></rect>
+                </svg>
+                <span>Print / Save PDF</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="container report-container">
+    <!-- Printable Formal Academic Report Sheet -->
+    <div class="report-sheet">
+        <!-- Report Header -->
+        <div class="report-header">
+            <div class="report-brand">
+                <h2>LUNG Academic Research Laboratory</h2>
+                <p>Explainable Deep Learning &amp; Counterfactual Causality in Thoracic Oncology</p>
+            </div>
+            <div class="report-meta-box">
+                <div><strong>Report ID:</strong> <code>{{ report.report_id }}</code></div>
+                <div><strong>Generated:</strong> {{ report.timestamp }}</div>
+                <div><strong>Target File:</strong> {{ report.image_filename }}</div>
+            </div>
+        </div>
+
+        <!-- Operating Mode Notice -->
+        {% if report.is_demo %}
+        <div class="report-alert-demo">
+            <strong>Operating Mode:</strong> {{ report.demo_notice }}
+        </div>
+        {% else %}
+        <div class="report-alert-live">
+            <strong>Operating Mode:</strong> Fully Trained CNN Weights Active in models/
+        </div>
+        {% endif %}
+
+        <!-- Section 1: Ingestion & Primary CNN Detection -->
+        <div class="report-section">
+            <h3 class="report-section-title">1. Primary CNN Detection Inference</h3>
+            <table class="report-table">
+                <tbody>
+                    <tr>
+                        <th style="width: 35%;">Classification Verdict</th>
+                        <td>
+                            <strong class="{% if report.predicted_class == 'Cancer' %}font-danger{% else %}font-success{% endif %}">
+                                {{ report.predicted_class }}
+                            </strong>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Overall Model Confidence</th>
+                        <td><strong>{{ report.confidence_pct }}%</strong></td>
+                    </tr>
+                    <tr>
+                        <th>Cancer Class Probability</th>
+                        <td>{{ report.cancer_prob_pct }}%</td>
+                    </tr>
+                    <tr>
+                        <th>Normal Class Probability</th>
+                        <td>{{ report.normal_prob_pct }}%</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Section 2: Grad-CAM Saliency Analysis -->
+        <div class="report-section">
+            <h3 class="report-section-title">2. Grad-CAM Visual Attention (Saliency Correlation)</h3>
+            <table class="report-table">
+                <tbody>
+                    <tr>
+                        <th style="width: 35%;">Grad-CAM Computation Status</th>
+                        <td><span class="badge badge-success">{{ report.gradcam_status }}</span></td>
+                    </tr>
+                    <tr>
+                        <th>Heatmap Visual Artifact</th>
+                        <td><code>{{ report.gradcam_heatmap_file or 'None' }}</code></td>
+                    </tr>
+                    <tr>
+                        <th>Blended Overlay Artifact</th>
+                        <td><code>{{ report.gradcam_overlay_file or 'None' }}</code></td>
+                    </tr>
+                    <tr>
+                        <th>Visual Attention Summary</th>
+                        <td>
+                            Receptive fields with the strongest positive gradient backpropagation correspond to focal thoracic opacities, localized within the pulmonary boundaries.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Section 3: Counterfactual What-If Causal Verification (Core Novelty) -->
+        <div class="report-section">
+            <h3 class="report-section-title">3. Counterfactual What-If Causal Analysis (Core Novelty)</h3>
+            {% if report.has_counterfactual %}
+            <table class="report-table">
+                <tbody>
+                    <tr>
+                        <th style="width: 35%;">In-Silico Intervention Mode</th>
+                        <td><strong>{{ report.cf_mode }}</strong> (Strength: {{ report.cf_strength }})</td>
+                    </tr>
+                    <tr>
+                        <th>Re-evaluated Classification</th>
+                        <td>
+                            <strong class="{% if report.cf_predicted_class == 'Cancer' %}font-danger{% else %}font-success{% endif %}">
+                                {{ report.cf_predicted_class }}
+                            </strong>
+                            ({{ report.cf_confidence_pct }}% confidence)
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Cancer Probability Shift</th>
+                        <td>
+                            <strong>{{ report.cancer_prob_pct }}% &rarr; {{ report.cf_cancer_prob_pct }}%</strong>
+                            (Delta: {{ report.confidence_change_pct }}%)
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Decision Boundary Flipped?</th>
+                        <td>
+                            <span class="badge {% if report.prediction_changed == 'YES' %}badge-success{% else %}badge-info{% endif %}">
+                                {{ report.prediction_changed }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Explainability Synthesis</th>
+                        <td>{{ report.cf_explanation }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            {% else %}
+            <p class="text-muted">
+                Counterfactual What-If analysis was not executed for this session. 
+                <a href="{{ url_for('counterfactual_page') }}" class="no-print">Run What-If Analysis</a>
+            </p>
+            {% endif %}
+        </div>
+
+        <!-- Section 4: Cancer Staging Evaluation -->
+        <div class="report-section">
+            <h3 class="report-section-title">4. Cancer Staging Assessment (TNM System)</h3>
+            <table class="report-table">
+                <tbody>
+                    <tr>
+                        <th style="width: 35%;">Predicted Clinical Stage</th>
+                        <td>
+                            <strong>{{ report.staging_stage }}</strong>
+                            {% if report.staging_tnm_code and report.staging_tnm_code != 'N/A' %}
+                            <span class="badge badge-info" style="margin-left: 0.5rem;">{{ report.staging_tnm_code }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% if report.staging_confidence and report.staging_confidence != 'N/A' %}
+                    <tr>
+                        <th>Staging Confidence</th>
+                        <td>{{ report.staging_confidence }}%</td>
+                    </tr>
+                    {% endif %}
+                    {% if report.staging_diameter_mm and report.staging_diameter_mm != 'N/A' %}
+                    <tr>
+                        <th>Estimated Primary Dimension</th>
+                        <td>~{{ report.staging_diameter_mm }} mm (Cross-sectional Equivalent)</td>
+                    </tr>
+                    {% endif %}
+                    {% if report.staging_description and report.staging_description != 'N/A' %}
+                    <tr>
+                        <th>TNM Morphological Criteria</th>
+                        <td>{{ report.staging_description }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if report.staging_treatment and report.staging_treatment != 'N/A' %}
+                    <tr>
+                        <th>Standard Clinical Protocol</th>
+                        <td>{{ report.staging_treatment }}</td>
+                    </tr>
+                    {% endif %}
+                    <tr>
+                        <th>Module Status</th>
+                        <td>{{ report.staging_message }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Section 5: Medical Ethics & Regulatory Disclaimer -->
+        <div class="report-section">
+            <h3 class="report-section-title">5. Regulatory Compliance &amp; Ethical Disclaimer</h3>
+            <div class="report-disclaimer-box">
+                <p><strong>NOTICE:</strong> {{ report.disclaimer }}</p>
+                <p style="margin-top: 0.5rem; font-size: 0.85rem;">
+                    This document was auto-generated by the LUNG Academic Research System for capstone evaluation and demonstration of Explainable Artificial Intelligence in diagnostic imaging.
+                </p>
+            </div>
+        </div>
+
+        <!-- Sign-off Block -->
+        <div class="report-signoff">
+            <div class="signoff-box">
+                <div class="signoff-line"></div>
+                <span>Lead Research Developer</span>
+            </div>
+            <div class="signoff-box">
+                <div class="signoff-line"></div>
+                <span>Academic Faculty Evaluator</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
