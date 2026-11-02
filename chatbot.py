@@ -8,14 +8,42 @@ KNOWLEDGE_BASE = [
         "topic": "Project Architecture & Workflow",
         "answer": (
             "This project implements an end-to-end academic framework for Lung Cancer Detection and Staging "
-            "using Convolutional Neural Networks (CNNs) coupled with Counterfactual What-If Explainability. "
+            "combining Convolutional Neural Networks (CNNs), Grad-CAM Explainability, Counterfactual What-If Causal Analysis, "
+            "Content-Based Similar Case Retrieval, and Longitudinal Disease Progression Simulation. "
             "The workflow consists of: (1) Image Validation & Preprocessing of chest CT scans, (2) CNN Classification "
-            "into Normal vs Cancer with confidence scoring, (3) Grad-CAM localization highlighting suspicious opacities, "
-            "(4) Counterfactual What-If Intervention where suspicious regions are perturbed (masked/blurred/attenuated) "
-            "and re-evaluated through the same model to test causal reasoning, (5) Optional Staging evaluation, "
-            "and (6) Automated Academic Report Generation."
+            "into Normal vs Cancer with confidence scoring, (3) Grad-CAM spatial heatmaps, (4) Counterfactual What-If "
+            "in-silico lesion perturbation, (5) TNM Staging Assessment, (6) Similar Case Retrieval matching historical patient outcomes, "
+            "(7) Serial CT Disease Progression Simulation, and (8) Automated Academic Report Generation."
         ),
-        "follow_ups": ["What is counterfactual analysis?", "What is Grad-CAM?", "How do I load a trained model?"]
+        "follow_ups": ["What is counterfactual analysis?", "How does similar case retrieval work?", "What is disease progression simulation?"]
+    },
+    {
+        "intent": "similar_case_retrieval",
+        "keywords": ["similar cases", "case retrieval", "cbir", "comparative", "outcomes", "treatment outcomes", "similar patient", "similar case retrieval"],
+        "topic": "Similar Case Retrieval System (CBIR)",
+        "answer": (
+            "The Similar Case Retrieval System uses Content-Based Image Retrieval (CBIR) to match the uploaded CT scan against "
+            "a multi-centric library of verified clinical cases. By constructing a 5-dimensional radiomic feature embedding "
+            "(cancer probability, lesion diameter, mean radiodensity attenuation, border spiculation, and AJCC stage), "
+            "it computes weighted cosine similarity to retrieve the top concordant cases. For each match, physicians can inspect "
+            "the confirmed histopathological diagnosis (e.g. Acinar Adenocarcinoma, Squamous Cell Carcinoma, Benign Hamartoma), "
+            "targeted biomarkers (EGFR, PD-L1), primary and systemic treatment regimens, RECIST 1.1 response rates, and 5-year survival outcomes."
+        ),
+        "follow_ups": ["How does disease progression simulation work?", "What is counterfactual analysis?", "What is staging?"]
+    },
+    {
+        "intent": "disease_progression",
+        "keywords": ["progression", "disease progression", "simulator", "doubling time", "vdt", "recist", "tumor growth", "next stage", "future progression", "kinetic"],
+        "topic": "Disease Progression Simulator & Kinetics",
+        "answer": (
+            "The Disease Progression Simulator enables longitudinal tracking of serial chest CT scans taken across clinical follow-up intervals "
+            "(e.g. Baseline, 3-Month, 6-Month, 12-Month). The system: (1) Quantifies tumor growth metrics including longest unidimensional diameter (mm), "
+            "cross-sectional area (mm²), and 3D ellipsoidal volume (cm³); (2) Computes Tumor Volume Doubling Time (VDT) via Schwartz's equation "
+            "and categorizes response under oncological RECIST 1.1 guidelines (Progressive Disease ≥+20%, Stable Disease, Partial Response ≤-30%); "
+            "(3) Generates multi-panel progression charts; and (4) Uses an exponential/Gompertzian kinetic model to forecast projected dimensions "
+            "at +3, +6, and +12 months, predicting the exact time horizon until the tumor breaches the next AJCC stage boundary."
+        ),
+        "follow_ups": ["How does similar case retrieval work?", "What is counterfactual analysis?", "What is staging?"]
     },
     {
         "intent": "counterfactual_whatif",
@@ -107,13 +135,14 @@ KNOWLEDGE_BASE = [
 DEFAULT_RESPONSE = {
     "topic": "Academic Project Support",
     "answer": (
-        "I am the Academic Assistant for the 'Lung Cancer Detection with Counterfactual What-If Analysis' project. "
+        "I am the Academic Assistant for the 'Lung Cancer Detection with Counterfactual What-If & Comparative Oncology' project. "
         "I can help explain our CNN detection pipeline, Grad-CAM visualization, Counterfactual What-If perturbation logic, "
-        "cancer staging, or medical safety considerations. Try asking one of the suggested questions below!"
+        "Similar Case Retrieval, Disease Progression Simulation, cancer staging, or medical safety considerations."
     ),
     "follow_ups": [
         "What is counterfactual analysis?",
-        "What is Grad-CAM?",
+        "How does similar case retrieval work?",
+        "What is disease progression simulation?",
         "How does this project work?",
         "What is staging?",
         "Is this a medical diagnosis?"
@@ -139,10 +168,8 @@ def get_chatbot_response(user_query: str) -> dict:
         score = 0
         for kw in item["keywords"]:
             kw_clean = re.sub(r"[^\w\s]", "", kw.lower())
-            # Exact phrase match gives highest weight
             if kw_clean in cleaned_query:
                 score += 8
-            # Token overlap gives secondary weight
             kw_tokens = set(kw_clean.split())
             overlap = len(query_tokens.intersection(kw_tokens))
             score += overlap * 2
@@ -165,9 +192,9 @@ def get_suggested_queries() -> list:
     """Returns list of common questions for quick-access chips."""
     return [
         "What is counterfactual analysis?",
-        "How does this project work?",
+        "How does similar case retrieval work?",
+        "What is disease progression simulation?",
         "What is Grad-CAM?",
         "What is CNN?",
-        "What is staging?",
-        "Is this a medical diagnosis?"
+        "What is staging?"
     ]

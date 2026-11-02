@@ -12,6 +12,8 @@ GENERATED_FOLDER = os.path.join(BASE_DIR, "generated")
 REPORTS_FOLDER = os.path.join(BASE_DIR, "reports")
 MODELS_FOLDER = os.path.join(BASE_DIR, "models")
 STATIC_FOLDER = os.path.join(BASE_DIR, "static")
+CASES_FOLDER = os.path.join(STATIC_FOLDER, "images", "cases")
+PROGRESSION_FOLDER = os.path.join(STATIC_FOLDER, "images", "progression")
 
 # File upload restrictions
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "bmp", "tiff", "dcm"}
@@ -45,9 +47,18 @@ COUNTERFACTUAL_STRENGTHS = {
 DEFAULT_MODE = "Mask suspicious region"
 DEFAULT_STRENGTH = "Medium"
 
+# Similar Case Retrieval Configurations
+SIMILAR_CASES_TOP_K = 4
+
+# Disease Progression Simulator Configurations
+PROGRESSION_TIMEPOINTS_MIN = 2
+PROGRESSION_TIMEPOINTS_MAX = 5
+RECIST_PROGRESSIVE_THRESHOLD = 20.0  # +20% diameter increase
+RECIST_PARTIAL_RESPONSE_THRESHOLD = -30.0  # -30% diameter decrease
+
 # Academic & Safety Metadata
 PROJECT_TITLE = "Lung Cancer Detection and Staging Using CNN with Counterfactual What-If Explainable Analysis"
-PROJECT_SHORT_TITLE = "Lung Cancer XAI & Counterfactual What-If"
+PROJECT_SHORT_TITLE = "Lung Cancer XAI & Comparative Oncology"
 ACADEMIC_YEAR = "Final Year Academic Capstone Project"
 DISCLAIMER = (
     "This application is an academic research prototype and does not provide a real medical diagnosis. "

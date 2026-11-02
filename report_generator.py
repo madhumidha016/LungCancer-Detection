@@ -8,10 +8,12 @@ def build_report_payload(
     detection_res: dict,
     gradcam_res: dict = None,
     cf_res: dict = None,
-    staging_res: dict = None
+    staging_res: dict = None,
+    similar_cases: list = None
 ) -> dict:
     """
-    Consolidates analysis metrics into a formal academic report data structure.
+    Consolidates analysis metrics into a formal academic report data structure,
+    including Counterfactual explainability and Similar Case comparative insights.
     """
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
     report_id = f"LUNG-XAI-{uuid.uuid4().hex[:8].upper()}"
@@ -59,7 +61,9 @@ def build_report_payload(
         "staging_treatment": staging_res.get("treatment_strategy", "N/A") if staging_res else "N/A",
         "staging_probabilities": staging_res.get("probabilities", {}) if staging_res else {},
         "staging_diameter_mm": staging_res.get("lesion_diameter_mm", "N/A") if staging_res else "N/A",
-        "staging_message": staging_res.get("message") if staging_res else "Staging analysis not performed."
+        "staging_message": staging_res.get("message") if staging_res else "Staging analysis not performed.",
+        # Similar Case Retrieval
+        "similar_cases": similar_cases or []
     }
 
     return report
@@ -131,16 +135,43 @@ def save_downloadable_report(report_data: dict, output_folder: str = None) -> tu
         f"Pathological Note  : {report_data.get('staging_description', 'N/A')}",
         f"Clinical Pathway   : {report_data.get('staging_treatment', 'N/A')}",
         f"Staging Status     : {report_data['staging_message']}",
-        "",
+        ""
+    ]
+
+    # Similar cases section
+    similar_cases = report_data.get("similar_cases", [])
+    if similar_cases:
+        lines.extend([
+            sub_divider,
+            "SECTION 5: SIMILAR CASE RETRIEVAL & COMPARATIVE CLINICAL INSIGHTS",
+            sub_divider,
+            f"Retrieved {len(similar_cases)} most radiomically concordant reference cases from oncology dataset:"
+        ])
+        for idx, sc in enumerate(similar_cases, 1):
+            lines.extend([
+                "",
+                f"  Case #{idx}: {sc['case_id']} (Match Score: {sc['match_pct']}%)",
+                f"    Patient Demographics : {sc['patient_age']}yo {sc['patient_gender']}, {sc['smoking_history']}",
+                f"    Confirmed Diagnosis  : {sc['diagnosis']} [{sc['stage']}]",
+                f"    Biomarkers & Genes   : {sc.get('biomarkers', 'N/A')}",
+                f"    Primary Treatment    : {sc['treatment_regimen']['primary']}",
+                f"    Systemic Therapy     : {sc['treatment_regimen']['systemic']}",
+                f"    Treatment Response   : {sc['treatment_outcomes']['response']}",
+                f"    Survival Outcome     : {sc['treatment_outcomes']['survival_metrics']}",
+                f"    Physician Insight    : {sc['physician_insights']}"
+            ])
+        lines.append("")
+
+    lines.extend([
         sub_divider,
-        "SECTION 5: REGULATORY & MEDICAL ETHICS DISCLAIMER",
+        "SECTION 6: REGULATORY & MEDICAL ETHICS DISCLAIMER",
         sub_divider,
         f"{report_data['disclaimer']}",
         "",
         divider,
         "END OF ACADEMIC EVALUATION REPORT",
         divider
-    ]
+    ])
 
     with open(filepath, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
